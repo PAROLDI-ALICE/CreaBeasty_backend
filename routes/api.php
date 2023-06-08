@@ -3,8 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentController;
@@ -34,7 +34,11 @@ Route::resource('/user', UserController::class);
 /*
 LOGIN/LOGOUT
 */
-//routes pour s'authentifier 
-Route::post('/login', [LoginController::class, 'login'])->name('login');
-//route pour se déconnecter
-Route::post('/logout', [LoginController::class, 'logout']);
+Route::controller(LoginController::class)->group(function () {
+    //Connexion
+    Route::post('login', 'login');
+    //Déconnexion
+    Route::post('logout', 'logout');
+    //Rafraîchir le token pour retenter le login
+    Route::post('refresh', 'refresh');
+});

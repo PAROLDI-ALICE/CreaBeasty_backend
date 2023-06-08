@@ -2,64 +2,93 @@
 
 namespace App\Http\Controllers;
 
-
 use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct()
     {
-        //
+        $this->middleware('auth:api', ['except' => ['login', 'logout', 'refresh']]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * LOGIN
      */
-    public function create()
+    public function login(Request $request)
     {
-        //
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+        //Vérification des conditions de validation
+        if (Auth::guard('user')->attempt($credentials)) {
+            $user = User::where('email', $credentials['email'])->first();
+            //Génération et stockage du TOKEN
+            $token = Auth::attempt($credentials);
+            //Récupération du booléen de la table 'Users' en BDD
+            if ($user->is_admin) {
+                Auth::guard('user')->login($user);
+                return response()->json([
+                    'authorization' => [
+                        'token' => $token,
+                        'type' => 'bearer',
+                    ],
+                    'message' => "Vous êtes connecté en tant qu'Admin.",
+                ]);
+            } else if ($user) {
+                Auth::guard('user')->login($user);
+                return response()->json([
+                    'authorization' => [
+                        'token' => $token,
+                        'type' => 'bearer',
+                    ],
+                    'message' => "Vous êtes connecté en tant que User.",
+                ]);
+            }
+        }
+        // else if (Auth::guard('user')->attempt($credentials)) {
+        //     $user = User::where('email', $credentials['email'])->first();
+        //     if ($user) {
+        //         Auth::guard('user')->login($user);
+        //         return response()->json([
+        //             'message' => "Vous êtes connecté en tant que User.",
+        //         ]);
+        //     }
+        // } 
+        else {
+            //Informations de connexion invalides -step back vers l'authentification
+            return redirect()->back()->withErrors(
+                [
+                    'message' => 'Adresse email ou mot de passe incorrect.'
+                ]
+            );
+        }
     }
 
     /**
-     * Store a newly created resource in storage.
+     * LOGOUT
      */
-    public function store(Request $request)
+    public function logout()
     {
-        //
+        Auth::logout(); //Fonction interne de logout pour tous Users
+        return response()->json(
+            ['message' => 'Vous êtes déconnecté.']
+        );
     }
 
     /**
-     * Display the specified resource.
+     * REFRESH
      */
-    public function show(string $id)
+    public function refresh()
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'user' => Auth::user(),
+            'authorisation' => [
+                'token' => Auth::refresh(),
+                'type' => 'bearer',
+            ]
+        ]);
     }
 }
