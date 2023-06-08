@@ -68,7 +68,7 @@ class UserController extends Controller
                 'address1' => $request->input('address1'),
                 'address2' => $request->input('address2'),
                 'phone' => $request->input('phone'),
-                'zipcode' => $request->input('phone'),
+                'zipcode' => $request->input('zipcode'),
                 'city' => $request->input('city'),
                 'country' => $request->input('country'),
             ];
