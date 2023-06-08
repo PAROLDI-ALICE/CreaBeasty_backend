@@ -59,6 +59,7 @@ class UserController extends Controller
             ], 422);
         } else {
             $user = [
+                'is_admin' => false, // set is_admin to false for regular users
                 'email' => $request->input('email'),
                 //Password Hashing
                 'password' => bcrypt($request->input('password')),
