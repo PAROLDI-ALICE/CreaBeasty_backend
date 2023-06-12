@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Pro;
-use Illuminate\Support\Facades\Auth;
+use Firebase\JWT\JWT;
+use Exception;
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\Key;
+
+
 
 class UserController extends Controller
 {
@@ -75,11 +79,32 @@ class UserController extends Controller
                 'city' => $request->input('city'),
                 'country' => $request->input('country'),
             ];
+
+            $topSecret = env('JWT_SECRET');
+            $encode = JWT::encode($token, new Key($topSecret, 'HS256'));
+            $token = $request->bearerToken();
+
+            // try {
+            //     $decoded = JWT::decode($token, new Key($topSecret, 'HS256'));
+            //     $role = $decoded->role;
+
+            //     // Do something based on the role value
+            //     if ($role === 'admin') {
+            //         // Handle admin role
+            //     } else {
+            //         // Handle other roles
+            //     }
+            // } catch (ExpiredException $e) {
+            //     return response()->json(['error' => 'Token has expired'], 401);
+            // } catch (Exception $e) {
+            //     return response()->json(['error' => 'Invalid token'], 401);
+            // }
             User::create($user);
             //on renvoie un code 200 et un message de confirmation de création.
             return response()->json([
                 'success' => true,
                 'message' => 'Votre profil a bien été créé',
+                'token' => $token // Include the token in the response
             ]);
         }
     }

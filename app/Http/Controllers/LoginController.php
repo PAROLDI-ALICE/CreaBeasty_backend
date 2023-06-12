@@ -5,6 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Firebase\JWT\JWT;
+use Exception;
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\Key;
+
+
 
 class LoginController extends Controller
 {
@@ -46,26 +52,22 @@ class LoginController extends Controller
                     ],
                     'message' => "Vous êtes connecté en tant que User.",
                 ]);
+                // } else if (!$token) {
+                //     return response()->json([
+                //         'message' => 'Unauthorized',
+                //     ], 401);
+                // }
+            } else {
+                //Informations de connexion invalides -step back vers l'authentification
+                return redirect()->back()->withErrors(
+                    [
+                        'message' => 'Adresse email ou mot de passe incorrect.'
+                    ]
+                );
             }
         }
-        // else if (Auth::guard('user')->attempt($credentials)) {
-        //     $user = User::where('email', $credentials['email'])->first();
-        //     if ($user) {
-        //         Auth::guard('user')->login($user);
-        //         return response()->json([
-        //             'message' => "Vous êtes connecté en tant que User.",
-        //         ]);
-        //     }
-        // } 
-        else {
-            //Informations de connexion invalides -step back vers l'authentification
-            return redirect()->back()->withErrors(
-                [
-                    'message' => 'Adresse email ou mot de passe incorrect.'
-                ]
-            );
-        }
     }
+
 
     /**
      * LOGOUT
