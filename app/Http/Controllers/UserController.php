@@ -6,9 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Exception;
 use Firebase\JWT\ExpiredException;
-use Firebase\JWT\Key;
+
 
 
 
@@ -65,7 +66,7 @@ class UserController extends Controller
             ], 422);
         } else {
             $user = [
-                'is_admin' => false, // set is_admin to false for regular users
+                'is_admin' => false, // is_admin en false pour les rsegular users
                 'email' => $request->input('email'),
                 //Password Hashing
                 'password' => bcrypt($request->input('password')),
@@ -79,26 +80,14 @@ class UserController extends Controller
                 'city' => $request->input('city'),
                 'country' => $request->input('country'),
             ];
-
-            $topSecret = env('JWT_SECRET');
-            $encode = JWT::encode($token, new Key($topSecret, 'HS256'));
-            $token = $request->bearerToken();
-
-            // try {
-            //     $decoded = JWT::decode($token, new Key($topSecret, 'HS256'));
-            //     $role = $decoded->role;
-
-            //     // Do something based on the role value
-            //     if ($role === 'admin') {
-            //         // Handle admin role
-            //     } else {
-            //         // Handle other roles
-            //     }
-            // } catch (ExpiredException $e) {
-            //     return response()->json(['error' => 'Token has expired'], 401);
-            // } catch (Exception $e) {
-            //     return response()->json(['error' => 'Invalid token'], 401);
-            // }
+            try {
+                $topSecret = env('JWT_SECRET');
+                $token = JWT::encode($user, $topSecret, 'HS256');
+            } catch (ExpiredException $e) {
+                return response()->json(['error' => 'Token has expired'], 401);
+            } catch (Exception $e) {
+                return response()->json(['error' => 'Invalid token'], 401);
+            }
             User::create($user);
             //on renvoie un code 200 et un message de confirmation de création.
             return response()->json([

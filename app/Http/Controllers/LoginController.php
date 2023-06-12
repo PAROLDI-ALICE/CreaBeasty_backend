@@ -6,9 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Exception;
 use Firebase\JWT\ExpiredException;
-use Firebase\JWT\Key;
+
 
 
 
