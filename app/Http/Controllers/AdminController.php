@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Exception;
+use Firebase\JWT\ExpiredException;
 
 class AdminController extends Controller
 {
@@ -11,7 +15,6 @@ class AdminController extends Controller
      */
     public function index()
     {
-        //
     }
 
     /**
@@ -27,7 +30,18 @@ class AdminController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $topSecret = env('JWT_SECRET');
+        $token = $request->bearerToken();
+        try {
+            $decoded = JWT::decode($token, new Key($topSecret, 'HS256'));
+            $role = $decoded->role;
+        } catch (ExpiredException $e) {
+            return response()->json(['error' => 'Token has expired'], 401);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
+        //  if ($role === 'admin') { 
+
     }
 
     /**
@@ -35,7 +49,6 @@ class AdminController extends Controller
      */
     public function show(string $id)
     {
-        //
     }
 
     /**
@@ -47,6 +60,7 @@ class AdminController extends Controller
     }
 
     /**
+     * 
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)

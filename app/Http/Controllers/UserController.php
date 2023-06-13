@@ -66,9 +66,8 @@ class UserController extends Controller
             ], 422);
         } else {
             $user = [
-                'is_admin' => false, // is_admin en false pour les rsegular users
+                'is_admin' => false, // is_admin en false pour les regular users
                 'email' => $request->input('email'),
-                //Password Hashing
                 'password' => bcrypt($request->input('password')),
                 'firstname' => $request->input('firstname'),
                 'lastname' => $request->input('lastname'),
@@ -89,11 +88,11 @@ class UserController extends Controller
                 return response()->json(['error' => 'Invalid token'], 401);
             }
             User::create($user);
-            //on renvoie un code 200 et un message de confirmation de création.
+            //on renvoie un code 200 et un message de confirmation de création
             return response()->json([
                 'success' => true,
                 'message' => 'Votre profil a bien été créé',
-                'token' => $token // Include the token in the response
+                'token' => $token
             ]);
         }
     }

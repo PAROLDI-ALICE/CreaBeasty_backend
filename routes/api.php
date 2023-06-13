@@ -36,9 +36,9 @@ LOGIN/LOGOUT
 */
 Route::controller(LoginController::class)->group(function () {
     //Connexion
-    Route::post('login', 'login');
+    Route::post('login', 'login')->name('login');
     //Déconnexion
-    Route::post('logout', 'logout');
+    Route::post('logout', 'logout')->name('logout');
     //Rafraîchir le token pour retenter le login
     Route::post('refresh', 'refresh');
 });

@@ -3,15 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Exception;
 use Firebase\JWT\ExpiredException;
-
-
-
 
 class LoginController extends Controller
 {
@@ -25,18 +23,22 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
         ]);
-        //Vérification des conditions de validation
-        if (Auth::guard('user')->attempt($credentials)) {
-            $user = User::where('email', $credentials['email'])->first();
-            //Génération et stockage du TOKEN
-            $token = Auth::attempt($credentials);
-            //Récupération du booléen de la table 'Users' en BDD
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        if (Auth::guard('user')->attempt($request->only('email', 'password'))) {
+            $user = User::where('email', $request->input('email'))->first();
             if ($user->is_admin) {
                 Auth::guard('user')->login($user);
+                $token = auth()->login($user);
                 return response()->json([
                     'authorization' => [
                         'token' => $token,
@@ -44,8 +46,9 @@ class LoginController extends Controller
                     ],
                     'message' => "Vous êtes connecté en tant qu'Admin.",
                 ]);
-            } else if ($user) {
+            } else {
                 Auth::guard('user')->login($user);
+                $token = auth()->login($user);
                 return response()->json([
                     'authorization' => [
                         'token' => $token,
@@ -53,32 +56,21 @@ class LoginController extends Controller
                     ],
                     'message' => "Vous êtes connecté en tant que User.",
                 ]);
-                // } else if (!$token) {
-                //     return response()->json([
-                //         'message' => 'Unauthorized',
-                //     ], 401);
-                // }
-            } else {
-                //Informations de connexion invalides -step back vers l'authentification
-                return redirect()->back()->withErrors(
-                    [
-                        'message' => 'Adresse email ou mot de passe incorrect.'
-                    ]
-                );
             }
         }
-    }
 
+        return response()->json([
+            'message' => "Les informations d'identification sont incorrectes.",
+        ], 401);
+    }
 
     /**
      * LOGOUT
      */
     public function logout()
     {
-        Auth::logout(); //Fonction interne de logout pour tous Users
-        return response()->json(
-            ['message' => 'Vous êtes déconnecté.']
-        );
+        Auth::logout(); // Fonction interne de logout pour tous les Users
+        return response()->json(['message' => 'Vous êtes déconnecté.']);
     }
 
     /**
@@ -88,7 +80,7 @@ class LoginController extends Controller
     {
         return response()->json([
             'user' => Auth::user(),
-            'authorisation' => [
+            'authorization' => [
                 'token' => Auth::refresh(),
                 'type' => 'bearer',
             ]
