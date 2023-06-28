@@ -65,7 +65,8 @@ class UserController extends Controller
                 'message' => $validator->errors()
             ], 422);
         } else {
-            $user = [
+            //Création User selon le modèle pour envoi en BDD
+            $user = User::create([
                 'is_admin' => false, // is_admin en false pour les regular users
                 'email' => $request->input('email'),
                 'password' => bcrypt($request->input('password')),
@@ -78,16 +79,17 @@ class UserController extends Controller
                 'zipcode' => $request->input('zipcode'),
                 'city' => $request->input('city'),
                 'country' => $request->input('country'),
-            ];
+            ]);
             try {
                 $topSecret = env('JWT_SECRET');
-                $token = JWT::encode($user, $topSecret, 'HS256');
+                $payload = $user->toArray();
+                $token = JWT::encode($payload, $topSecret, 'HS256');
             } catch (ExpiredException $e) {
                 return response()->json(['error' => 'Token has expired'], 401);
             } catch (Exception $e) {
                 return response()->json(['error' => 'Invalid token'], 401);
             }
-            User::create($user);
+
             //on renvoie un code 200 et un message de confirmation de création
             return response()->json([
                 'success' => true,

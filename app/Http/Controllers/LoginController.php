@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -29,16 +29,16 @@ class LoginController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors(),
-            ], 422);
+            return response()->json(['message' => 'Adresse email ou mot de passe incorrect.'], 422);
         }
 
-        if (Auth::guard('user')->attempt($request->only('email', 'password'))) {
+        $credentials = $validator->validated();
+
+        if (Auth::guard('user')->attempt($credentials)) {
             $user = User::where('email', $request->input('email'))->first();
-            if ($user->is_admin) {
+            if ($user->is_admin == 1) {
                 Auth::guard('user')->login($user);
-                $token = auth()->login($user);
+                $token = $this->generateToken($user);
                 return response()->json([
                     'authorization' => [
                         'token' => $token,
@@ -48,7 +48,7 @@ class LoginController extends Controller
                 ]);
             } else {
                 Auth::guard('user')->login($user);
-                $token = auth()->login($user);
+                $token = $this->generateToken($user);
                 return response()->json([
                     'authorization' => [
                         'token' => $token,
@@ -57,11 +57,29 @@ class LoginController extends Controller
                     'message' => "Vous êtes connecté en tant que User.",
                 ]);
             }
+        } else {
+            return response()->json(['message' => 'Adresse email ou mot de passe incorrect.'], 422);
         }
+    }
 
-        return response()->json([
-            'message' => "Les informations d'identification sont incorrectes.",
-        ], 401);
+    private function generateToken($user)
+    {
+        $key = env('JWT_SECRET');
+        $payload = [
+            'iss' => config('app.name'),
+            'sub' => $user->id,
+            'iat' => time(),
+            'exp' => time() + (60 * 60), //Set du temps imparti 
+        ];
+
+        try {
+            $token = JWT::encode($payload, $key, 'RS256');
+            return $token;
+        } catch (ExpiredException $e) {
+            return response()->json(['error' => 'Token has expired'], 401);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Invalid token'], 401);
+        }
     }
 
     /**
