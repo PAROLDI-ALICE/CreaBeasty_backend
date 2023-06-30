@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
-        Schema::create('users_datas', function (Blueprint $table) {
+        Schema::create('products_orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->unsignedBigInteger('admin_id');
-            $table->string('email', 100);
-            $table->string('password', 100);
+            $table->bigInteger('product_id');
+            $table->foreign('product_id')->references('id')->on('products');
+            $table->bigInteger('order_id');
+            $table->foreign('order_id')->references('id')->on('orders');
+            $table->bigInteger('quantity');
         });
 
         Schema::enableForeignKeyConstraints();
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users_datas');
+        Schema::dropIfExists('products_orders');
     }
 };
